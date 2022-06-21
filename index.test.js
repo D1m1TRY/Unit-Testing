@@ -7,19 +7,19 @@ const weekdaysShort = 'Sun_Mon_Tue_Wed_Thu_Fri_Sat'.split('_');
 const weekdaysMin = 'Su_Mo_Tu_We_Th_Fr_Sa'.split('_');
 const customFormats = [ 'ISODate', 'ISOTime', 'ISODateTime', 'ISODateTimeTZ' ];
 
-const fullYear = date.getFullYear();
-const yyDate = fullYear % 100;
-const monthIndex = date.getMonth();
-const dayindex = date.getDay();
-const dateindex = date.getDate();
-const hour = date.getHours();
-const minutes = date.getMinutes();
-const seconds = date.getSeconds();
-const milliseconds = date.getMilliseconds();
-const twelveHourFormat = hour % 12 || 12;
+const fullYear = date.getFullYear().toString();
+const lastTwoDigitOfYear = fullYear % 100;
+const currentMonthIndex = date.getMonth();
+const currentDayIndex = date.getDay();
+const numberOfDate = date.getDate();
+const currentHourValue = date.getHours();
+const currentMinutesValue = date.getMinutes().toString();
+const currentSecondsValue = date.getSeconds().toString();
+const currentMillisecondsValue = date.getMilliseconds().toString();
+const twelveHourFormat = currentHourValue % 12 || 12;
 
-const ISODateValue = `${fullYear}-${leadingZeroes(monthIndex + 1)}-${leadingZeroes(dateindex)}`;
-const ISOTimeValue = `${leadingZeroes(twelveHourFormat)}:${leadingZeroes(minutes)}:${leadingZeroes(seconds)}`;
+const ISODateValue = `${fullYear}-${leadingZeroes(currentMonthIndex + 1)}-${leadingZeroes(numberOfDate)}`;
+const ISOTimeValue = `${leadingZeroes(twelveHourFormat)}:${leadingZeroes(currentMinutesValue)}:${leadingZeroes(currentSecondsValue)}`;
 const ISODateTimeValue = `${ISODateValue}T${ISOTimeValue}`;
 
 function leadingZeroes(value, length) {
@@ -36,6 +36,12 @@ function leadingZeroes(value, length) {
 
 expect.extend({
   getTimeZoneValue(received, date, format, separator = '') {
+    if (!(date instanceof Date)) {
+      return {
+        message: () => "You get an Error because the received value isn't instanceof Date",
+        pass: false
+      };
+    }
     const tz = date.getTimezoneOffset();
     const hours = Math.abs(Math.floor(tz / 60));
     const mins = tz % 60;
@@ -45,181 +51,183 @@ expect.extend({
     const isPassed = result === received;
     if (isPassed) {
       return {
-        message: () => {
-          `expected ${received} to be ${result}`
-        },
+        message: () => `expected ${received} to be ${result}`,
         pass: true
       };
     } else {
       return {
-        message: () => {
-          `${result} isn't correct`
-        },
+        message: () => `${result} isn't correct`,
         pass: false
       };
     }
    
   },
-  analizeHourFormat (received, hour, isUpperCase) {
+  analizeHourFormat (received, currentHourValue, isUpperCase) {
     let result = 'am';
-    if (hour > 11) {
+    if (currentHourValue && currentHourValue > 11) {
       result = 'pm';
     }
     if (isUpperCase) {
       result = result.toUpperCase()
     }
     const isPassed = result === received;
+    if (typeof currentHourValue !== 'number') {
+      return {
+        message: () => `Result isn't correct probably because typeof currentHourValue must be a number`,
+        pass: false
+      };
+    }
+    if (currentHourValue.toString().length > 2) {
+      return {
+        message: () => `Result isn't correct probably because currentHourValue argument has incorrect value`,
+        pass: false
+      };
+    }
     if (isPassed) {
       return {
-        message: () => {
-          `expected ${received} to be ${result}`
-        },
+        message: () => `expected ${received} to be ${result}`,
         pass: true
       };
     } else {
       return {
-        message: () => {
-          `${result} isn't correct`
-        },
+        message: () => `${result} isn't correct`,
         pass: false
       };
     }
   }
 })
 
-test('test _formatters', () => {
+test('that test should check containing _formatters values', () => {
   expect(unitTestingTask._formatters['ISODate'](date)).toBe(ISODateValue);
   expect(unitTestingTask._formatters['ISOTime'](date)).toBe(ISOTimeValue);
   expect(unitTestingTask._formatters['ISODateTime'](date)).toBe(ISODateTimeValue);
 });
 
-test('test to have 0 conflicts', () => {
+test('that test should check for any conflicts when we call function', () => {
   expect(unitTestingTask).toBeDefined();
   expect(unitTestingTask.noConflict()).toBe(unitTestingTask);
 });
 
-test('test to get list of custom formats', () => {
+test('that test should return list of custom formats', () => {
   expect(unitTestingTask.formatters()).toEqual(expect.arrayContaining(customFormats));
 });
 
-test('test to get error when format arg is not a string type', () => {
+test('that test should return error when format arg is not a string type', () => {
   expect(() => unitTestingTask(null, date)).toThrow(/format/);
-});
+});22
 
-test('test to get error when date arg must be instance of Date or Unix Timestamp or ISODate String', () => {
+test('that test should return error when date arg must be instance of Date or Unix Timestamp or ISODate String', () => {
   expect(() => unitTestingTask('YYYY', null)).toThrow(/date/);
 });
 
-test('test to get correct result if date arg will be Unix Timestamp', () => {
-  expect(unitTestingTask('YYYY', +date)).toBe(fullYear.toString());
+test('that test must return number of year if date arg will be Unix Timestamp', () => {
+  expect(unitTestingTask('YYYY', +date)).toBe(fullYear);
 });
 
-test('test to get correct result if date arg will be in ISODate String', () => {
-  expect(unitTestingTask('YYYY', date.toISOString())).toBe(fullYear.toString());
+test('that test must return number of year if date arg will be in ISODate String', () => {
+  expect(unitTestingTask('YYYY', date.toISOString())).toBe(fullYear);
 });
 
-test('test to get correct lang', () => {
+test('it should return correct lang', () => {
   expect(unitTestingTask.lang()).toBe('en');
 });
 
-test('test to get full year', () => {
-  expect(unitTestingTask('YYYY', date)).toBe(fullYear.toString());
+test('that test should return number of year', () => {
+  expect(unitTestingTask('YYYY', date)).toBe(fullYear);
 });
 
-test('test to get two last numbers of year', () => {
-  expect(unitTestingTask('YY', date)).toBe(yyDate.toString())
+test('that test should return two last numbers of year', () => {
+  expect(unitTestingTask('YY', date)).toBe(lastTwoDigitOfYear.toString())
 })
 
-test('test to get month name', () => {
-  expect(unitTestingTask('MMMM', date)).toBe(months[monthIndex]);
+test('that test should return month name', () => {
+  expect(unitTestingTask('MMMM', date)).toBe(months[currentMonthIndex]);
 });
 
-test('test to get short month name', () => {
-  expect(unitTestingTask('MMM', date)).toBe(monthsShort[monthIndex]);
+test('that test should return short month name', () => {
+  expect(unitTestingTask('MMM', date)).toBe(monthsShort[currentMonthIndex]);
 });
 
-test('test to get month number', () => {
-  expect(unitTestingTask('MM', date)).toBe(leadingZeroes(monthIndex + 1));
+test('that test should return month number', () => {
+  expect(unitTestingTask('MM', date)).toBe(leadingZeroes(currentMonthIndex + 1));
 });
 
-test('test to get month number without zero-padding', () => {
-  expect(unitTestingTask('M', date)).toBe((monthIndex + 1).toString());
+test('that test should return month number without zero-padding', () => {
+  expect(unitTestingTask('M', date)).toBe((currentMonthIndex + 1).toString());
 });
 
-test('test to get day name', () => {
-  expect(unitTestingTask('DDD', date)).toBe(weekdays[dayindex]);
+test('that test should return day name', () => {
+  expect(unitTestingTask('DDD', date)).toBe(weekdays[currentDayIndex]);
 });
 
-test('test to get short day name', () => {
-  expect(unitTestingTask('DD', date)).toBe(weekdaysShort[dayindex]);
+test('that test should return short day name', () => {
+  expect(unitTestingTask('DD', date)).toBe(weekdaysShort[currentDayIndex]);
 });
 
-test('test to get min day name', () => {
-  expect(unitTestingTask('D', date)).toBe(weekdaysMin[dayindex]);
+test('that test should return two-letter format of day name', () => {
+  expect(unitTestingTask('D', date)).toBe(weekdaysMin[currentDayIndex]);
 });
 
-test('test to get number of day with zero-padding', () => {
-  expect(unitTestingTask('dd', date)).toBe(leadingZeroes(dateindex));
+test('that test should return number of day with zero-padding', () => {
+  expect(unitTestingTask('dd', date)).toBe(leadingZeroes(numberOfDate));
 });
 
-test('test to get number of day', () => {
-  expect(unitTestingTask('d', date)).toBe((dateindex).toString());
+test('that test should return number of day', () => {
+  expect(unitTestingTask('d', date)).toBe((numberOfDate).toString());
 });
 
-test('test to get zero-padded hour in 24-hr format', () => {
-  expect(unitTestingTask('HH', date)).toBe(leadingZeroes(hour));
+test('that test should return zero-padded current hour in 24-hr format', () => {
+  expect(unitTestingTask('HH', date)).toBe(leadingZeroes(currentHourValue));
 });
 
-test('test to get hour in 24-hr format', () => {
-  expect(unitTestingTask('H', date)).toBe(hour.toString());
+test('that test should return current hour in 24-hr format', () => {
+  expect(unitTestingTask('H', date)).toBe(currentHourValue.toString());
 });
 
-test('test to get zero-padded hour in 24-hr format', () => {
+test('that test should return zero-padded hour in 12-hr format', () => {
   expect(unitTestingTask('hh', date)).toBe(leadingZeroes(twelveHourFormat));
 });
 
-test('test to get hour in 24-hr format', () => {
+test('that test should return current hour in 12-hr format', () => {
   expect(unitTestingTask('h', date)).toBe(twelveHourFormat.toString());
 });
 
-test('test to get zero-padded minutes', () => {
-  expect(unitTestingTask('mm', date)).toBe(leadingZeroes(minutes));
+test('that test should return zero-padded minutes', () => {
+  expect(unitTestingTask('mm', date)).toBe(leadingZeroes(currentMinutesValue));
 });
 
-test('test to get minutes', () => {
-  expect(unitTestingTask('m', date)).toBe(minutes.toString());
+test('that test should return current minutes time', () => {
+  expect(unitTestingTask('m', date)).toBe(currentMinutesValue);
 });
 
-test('test to get zero-padded seconds', () => {
-  expect(unitTestingTask('ss', date)).toBe(leadingZeroes(seconds));
+test('that test should return zero-padded seconds time', () => {
+  expect(unitTestingTask('ss', date)).toBe(leadingZeroes(currentSecondsValue));
 });
 
-test('test to get seconds', () => {
-  expect(unitTestingTask('s', date)).toBe(seconds.toString());
+test('that test should return seconds time', () => {
+  expect(unitTestingTask('s', date)).toBe(currentSecondsValue);
 });
 
-test('test to get zero-padded milliseconds', () => {
-  expect(unitTestingTask('ff', date)).toBe(leadingZeroes(milliseconds, 3));
+test('that test should return zero-padded current milliseconds time', () => {
+  expect(unitTestingTask('ff', date)).toBe(leadingZeroes(currentMillisecondsValue, 3));
 });
 
-test('test to get milliseconds', () => {
-  expect(unitTestingTask('f', date)).toBe(milliseconds.toString());
+test('that test should return milliseconds time', () => {
+  expect(unitTestingTask('f', date)).toBe(currentMillisecondsValue);
 });
 
-test('test to get twelve time format uppercase', () => {
-  expect(unitTestingTask('A', date)).analizeHourFormat(hour, true);
+test('that test should return twelve time format (AM or PM) uppercase', () => {
+  expect(unitTestingTask('A', date)).analizeHourFormat(currentHourValue, true);
 });
 
-test('test to get twelve time format', () => {
-  expect(unitTestingTask('a', date)).analizeHourFormat(hour);
+test('that test should return twelve time format (am or pm)', () => {
+  expect(unitTestingTask('a', date)).analizeHourFormat(currentHourValue);
 });
 
-test('test to get time zone in ISO8601-compatible basic format', () => {
+test('that test should return time zone in ISO8601-compatible basic format', () => {
   expect(unitTestingTask('ZZ', date)).getTimeZoneValue(date);
 });
 
-test('test to get time zone in ISO8601-compatible extended format', () => {
+test('that test should return time zone in ISO8601-compatible extended format', () => {
   expect(unitTestingTask('Z', date)).getTimeZoneValue(date, null, ':');
 });
-
-
